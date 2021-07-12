@@ -1,5 +1,5 @@
 ## Summary
-Facemasking algorithm to de-identify high resolution MRI of the head. It is derived from the original <a href="https://download.nrg.wustl.edu/pub/FaceMasking/">facemasking</a> tool. 
+Facemasking algorithm to de-identify high resolution MRI of the head. Earlier versions are <a href="https://download.nrg.wustl.edu/pub/FaceMasking/">here</a>. 
 
 ## Installing as a local tool
 Environment requirements:
