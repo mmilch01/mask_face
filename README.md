@@ -26,9 +26,9 @@ For a full list of options, run **mask_face** without parameters. If you wish to
 **sudo docker run** -u $(id -u ${USER}):$(id -g ${USER}) -v \`pwd\`:/docker_mount --rm xnat/facemasking:1.0 **mask_face_nomatlab** <dicom_series_dir> [options] <br>
 To add GPU support to run HDBET, use --gpus <gpu_id|all> option with **docker run** command.
 
-## Reviewing output
-1. A mosaic of the facemasked image is saved under maskface/<original_dicom_dir_name>\_normfilter.png
+## Interpreting output
+1. A mosaic of the facemasked image is saved under maskface/<original_dicom_dir_name>_normfilter.png
 2. A 3D surface rendering of facemasked image is saved under maskface/<original_dicom_dir_name>\_normfilter_surf.png
-3. Facemasked image in Analyze 7.5 format is saved under maskface/<original_dicom_dir_name>\_full\_normfilter.img
+3. Facemasked image in Analyze 7.5 format is saved under maskface/<original_dicom_dir_name>\_masked_nii_orig.img
 4. MATLAB output logs are saved under maskface/*.out
 5. Defaced DICOM's are saved under DICOM_DEFACED dir.
