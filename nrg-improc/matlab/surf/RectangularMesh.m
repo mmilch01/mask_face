@@ -1,4 +1,6 @@
-% Comments:	Mikhail Milchenko, mmilch@npg.wustl.edu, Washington University School of Medicine. 
+% Comments:	Mikhail Milchenko, mmilchenko@wustl.edu, Washington University School of Medicine. 
+% Algorithm:	Facemasking 1
+
 % Mask: binary mask of VOI
 % thickness: level depth
 % step: partition step

@@ -437,7 +437,7 @@ if [ -z "$1" ]; then
 	echo "			all other scans to it. Use ROI's based on <ref>."
 	echo "	-mcr_home <dir>	MATLAB runtime environment home [/usr/local/MATLAB_MCR/v94]"
 	echo "	-deployed_home <dir>"
-	echo "			Deployed MCR application home [/usr/local/maskface2]"
+	echo "			Deployed MCR application home [/usr/local/maskface]"
 	exit 0
 fi
 
@@ -463,7 +463,7 @@ unset an exMask outdir brainmask tdate
 
 #default paths, as installed in docker image
 mcr_home=/usr/local/MATLAB_MCR/v94
-deployed_home=/usr/local/maskface2
+deployed_home=/usr/local/maskface
 
 
 for((i=1; i<${#args[*]}; i++)); do

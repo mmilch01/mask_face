@@ -37,8 +37,10 @@ pushd nrg_improc &> /dev/null
         pushd $matlab_dir/surf &> /dev/null
                 echo cp -rf $matlab_surf_resources $T/matlab/surf/
                 cp -rf $matlab_surf_resources $T/matlab/surf/
-        popd &> /dev/null
+        popd &> /dev/null        
 popd &> /dev/null
+sed -i "s|/usr/local/maskface2|/usr/local/maskface|g" $T/mask_face_nomatlab
+
 
 rm -rf fsl
 
