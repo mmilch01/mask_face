@@ -413,7 +413,7 @@ function run_masking_secondary
 step=1.0
 if [ -f "maskface.params" ]; then source maskface.params; fi
 echo "########################################################################"
-echo "# mask_face 2, ver. April, 2021"
+echo "# mask_face, ver. July, 2021"
 echo "########################################################################"
 
 if [ -z "$1" ]; then

@@ -40,7 +40,8 @@ pushd nrg_improc &> /dev/null
         popd &> /dev/null        
 popd &> /dev/null
 sed -i "s|/usr/local/maskface2|/usr/local/maskface|g" $T/mask_face_nomatlab
-
+sed -i "s|mask_face 2|mask_face|g" $T/mask_face_nomatlab
+sed -i "s|mask_face 2|mask_face|g" $T/mask_face
 
 rm -rf fsl
 
@@ -71,6 +72,7 @@ pushd $fslbin &> /dev/null
 popd &> /dev/null
 
 sed -i "s|.*fslpython.*|#!/usr/local/miniconda3/bin/python|g" fsl/bin/imcp
+
 
 fsl_libs=(libgfortran.so.3 libopenblas.so.0)
 libs64=(libquadmath.so.0.0.0)
