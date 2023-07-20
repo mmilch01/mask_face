@@ -1,5 +1,5 @@
 ## Summary
-Facemasking algorithm to de-identify high resolution MRI of the head. Earlier versions are <a href="https://download.nrg.wustl.edu/pub/FaceMasking/">here</a>. 
+Facemasking algorithm to de-identify high resolution MRI of the human head. Earlier versions are <a href="https://download.nrg.wustl.edu/pub/FaceMasking/">here</a>. 
 
 ## Installing as a local tool
 Environment requirements:
@@ -23,12 +23,12 @@ For a full list of options, run **mask_face** without parameters. If you wish to
 2. As a deployed MCR application (currently not supported):<br>
 **mask_face_nomatlab** <dicom_series_dir> -mcr_home <Matlab runtime environment v 9.4 installation dir> -deployed_home <deployed app dir copied from mcr/for_redistribution_files_only> <dicom_series_dir> [options]
 3. As a Docker container: <br>
-**sudo docker run** -u $(id -u ${USER}):$(id -g ${USER}) -v \`pwd\`:/docker_mount --rm xnat/facemasking:1.0 **mask_face_nomatlab** <dicom_series_dir> [options] <br>
+`**sudo docker run** -u $(id -u ${USER}):$(id -g ${USER})` -v \`pwd\`:/docker_mount --rm xnat/facemasking:1.0 **mask_face_nomatlab** \<dicom_series_dir\> options]<br>
 To add GPU support to run HDBET, use --gpus <gpu_id|all> option with **docker run** command.
 
-## Reviewing output
-1. A mosaic of the facemasked image is saved under maskface/<original_dicom_dir_name>\_normfilter.png
+## Interpreting output
+1. A mosaic of the facemasked image is saved under maskface/<original_dicom_dir_name>_normfilter.png
 2. A 3D surface rendering of facemasked image is saved under maskface/<original_dicom_dir_name>\_normfilter_surf.png
-3. Facemasked image in Analyze 7.5 format is saved under maskface/<original_dicom_dir_name>\_full\_normfilter.img
+3. Facemasked image in Analyze 7.5 format is saved under maskface/<original_dicom_dir_name>\_masked_nii_orig.img
 4. MATLAB output logs are saved under maskface/*.out
 5. Defaced DICOM's are saved under DICOM_DEFACED dir.
