@@ -31,3 +31,5 @@ COPY nrg-improc /nrgpackages/tools/nrg-improc/
 COPY fsl	/nrgpackages/packages/fsl/
 
 WORKDIR /docker_mount
+ENTRYPOINT [ "/bin/bash", "-l", "-c" ]
+

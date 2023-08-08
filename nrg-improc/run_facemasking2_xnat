@@ -23,6 +23,9 @@ fi
 RT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 xn_exp=$1; shift
 scans=$1; shift
+#remove extra commas in the end
+scans="${scans%,,}"; scans="${scans%,}"
+
 
 unset xn_srv xn_usr xn_pass xn_prj xn_subj ref
 

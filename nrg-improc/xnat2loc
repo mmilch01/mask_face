@@ -241,7 +241,11 @@ if [ -n "$scans" -a -z "$rdirs" ]; then
 		save_UID_map $slabel `pwd`/scans.txt "${sarr[*]}"
 	fi
 #	set +x
-	mv */scans/*/*/$dcmdir/files/* DICOM/
+    #fix for long file lists.
+    echo */scans/*/*/$dcmdir/files/* | xargs mv -t DICOM --
+	#mv */scans/*/*/$dcmdir/files/* DICOM/
+	#rsync -a */scans/*/*/$dcmdir/files/* DICOM/
+	#find . -name "*/scans/*/*/$dcmdir/files/*" -exec mv -t DICOM {} +
 	
 	if (( uncompress )); then 
 		echo uncompress_dcm_dir `pwd`/DICOM

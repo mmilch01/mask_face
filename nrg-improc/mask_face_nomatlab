@@ -569,14 +569,35 @@ if [ -z "$an" ]; then
 		if (( mni == 0 )); then
 		    echo dcm2analyze -D $st -A $bst
 			dcm2analyze -D $st -A $bst
+			if (( $? )); then
+				echo "ERROR running dcm2analyze, exiting"
+				exit -1
+			fi
+				
 		else
 			#convert target to standard space but also keep inverse matrix and raw DICOM voxels.
 			echo dcm2analyze -D $st -A ${bst}_d2a
 			dcm2analyze -D $st -A ${bst}_d2a
-			echo dcm_nii $st ${bst}_nii_orig -m ${bst}2std.mat
-			dcm_nii $st ${bst}_nii_orig -m ${bst}2std.mat
+			if (( $? )); then
+				echo "ERROR running dcm2analyze, exiting"
+				exit -1
+			fi
+			#echo dcm_nii $st ${bst}_nii_orig -m ${bst}2std.mat			
+			#dcm_nii $st ${bst}_nii_orig -m ${bst}2std.mat
+
+			echo dcm_niix $st ${bst}_nii -m ${bst}2std.mat			
+			dcm_niix $st ${bst}_nii -m ${bst}2std.mat
+			if (( $? )); then 
+				echo "ERROR running dcm_niix, exiting"
+				exit -1
+			fi
+
 			echo nii_img ${bst}_nii_orig 
 			nii_img ${bst}_nii_orig 
+			if (( $? )); then 
+				echo "ERROR running nii_img, exiting"
+				exit -1
+			fi
 			rm -rf ${bst}_nii_orig.nii
 			echo fslreorient2std ${bst}_nii_orig ${bst}_nii_std
 			fslreorient2std ${bst}_nii_orig ${bst}_nii_std

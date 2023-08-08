@@ -50,8 +50,8 @@ ref=${ref%/dcm_nii}
 
 mkdir -p ${rt}_nii
 cp $ref/dcm2nii.ini ${rt}_nii/$rt.ini
-echo dcm2nii2013 -b ${rt}_nii/$rt.ini -o ${rt}_nii ${inrt}
-dcm2nii2013 -b ${rt}_nii/$rt.ini -o ${rt}_nii ${inrt}
+echo dcm2nii2013 -m 1 -b ${rt}_nii/$rt.ini -o ${rt}_nii ${inrt}
+dcm2nii2013 -m 1 -b ${rt}_nii/$rt.ini -o ${rt}_nii ${inrt}
 
 pushd ${rt}_nii &> /dev/null
 gunzip *.gz
