@@ -1,5 +1,5 @@
-sudo docker tag registry.nrg.wustl.edu/docker/nrg-repo/facemasking:latest \
-    xnat/facemasking:1.0
-sudo docker login docker.io
-sudo docker push xnat/facemasking:1.0
+docker tag registry.nrg.wustl.edu/docker/nrg-repo/facemasking:latest \
+    xnat/facemasking:1.1
+docker login docker.io
+docker push xnat/facemasking:1.1
 

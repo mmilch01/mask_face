@@ -155,7 +155,7 @@ function write_out
 	local procdir=$4
 	local s=${src#study}
 	local k
-	if [ -z "$an" ]; then
+	if [ -z "$an" -a -z "$nii" ]; then
 		flips=""
 		mkdir -p $outdcmdir
 		#if the original was transformed to standard space, transform back.
@@ -428,6 +428,20 @@ EOF
 
 }
 
+function getrt
+{
+	local st rt=$1 base=$2
+		st=${rt%.hdr}
+		st=${st%.img}
+		st=${st%.gz}
+		st=${st%.mgz}
+		st=${st%.nii}
+		if [ -n "$base" ]; then 
+			echo `basename "$st"`
+		else
+			echo $st
+		fi
+}
 
 ############################################################################
 # starting the main script.
@@ -448,15 +462,17 @@ echo FSLOUTPUTTYPE=$FSLOUTPUTTYPE
 
 step=1.0
 if [ -f "maskface.params" ]; then source maskface.params; fi
-
 echo "########################################################################"
-echo "# mask_face, ver. July, 2021"
+echo "# mask_face, ver. August, 2023"
 echo "########################################################################"
 
 if [ -z "$1" ]; then
 	echo "Usage: mask_face <scan1>[,scan2,...,scanN] [options]"
 	echo "Options:"
-	echo "	-a 		input/output is Analyze [DICOM is default]"
+	echo "	-a 		input/output is Analyze .hdr/.img pair [DICOM is default]"
+	echo "	-nii	input/output is NIFTI .nii [DICOM is default]"
+	echo "	-mgz	input/output is MGZ .mgz [DICOM is default]"
+	echo "	-debug	debug mode: downsample input to 2mm cubic voxels to speed processing up (only -a or -nii options)"
 	echo "	-o <path>	output DICOM root directory (default is pwd)"
 	echo "	-m <method>	obscuring method: coating, blur, [normfilter]"
 	echo "	-t <float>	mask threshold"	
@@ -488,17 +504,18 @@ args=( $args )
 v=0
 sg=1
 src=$1
-if [ -f "$src" ]; then src=`cat $src`; fi
+#if [ -f "$src" ]; then src=`cat $src`; fi
 src=(`split_str "$src" ","`)
-
 procdir=maskface;brainmask=0;manual_roi=0;mask_atlas=0;bhd=0;brain_reg=0;
 mni=1
 unset an exMask outdir brainmask tdate
-#set -x
 
 for((i=1; i<${#args[*]}; i++)); do
+	if [ "${args[i]}" == "-debug" ]; then debug="1"; continue; fi	
 	if [ "${args[i]}" == "-d" ]; then tdate="1"; continue; fi	
 	if [ "${args[i]}" == "-a" ]; then an="1"; continue; fi	
+	if [ "${args[i]}" == "-nii" ]; then nii="1"; continue; fi
+	if [ "${args[i]}" == "-mgz" ]; then mgz="1"; continue; fi
 	if [ "${args[i]}" == "-z" ]; then create_zip="1"; continue; fi
 	if [ "${args[i]}" == "-nil" ]; then mni=0; continue; fi		
 	if [ "${args[i]}" == "-z" ]; then create_zip="1"; continue; fi	
@@ -509,7 +526,7 @@ for((i=1; i<${#args[*]}; i++)); do
 	if [ "${args[i]}" == "-o" ]; then (( i++ )); outdir=${args[i]}; continue; fi
 	if [ "${args[i]}" == "-cost" ]; then (( i++ ));	cost=${args[i]}; continue; fi
 	if [ "${args[i]}" == "-t" ]; then (( i++ )); thresh=${args[i]};	continue; fi
-	if [ "${args[i]}" == "-p" ]; then (( i++ )); rt=${args[i]}; continue; fi
+	if [ "${args[i]}" == "-p" ]; then (( i++ )); rt="`getrt ${args[i]}`"; continue; fi
 	if [ "${args[i]}" == "-x" ]; then (( i++ )); exMask=${args[i]}; continue; fi
 	if [ "${args[i]}" == "-m" ]; then (( i++ )); method=${args[i]}; continue; fi
 	if [ "${args[i]}" == "-v" ]; then (( i++ )); v=${args[i]}; continue; fi
@@ -535,6 +552,12 @@ for((i=1; i<${#args[*]}; i++)); do
 	if [ "${args[i]}" == "-ver" ]; then (( i++ )); vers=(`split_str ${args[i]} ","`);
  continue; fi
 done
+if (( debug )); then 
+	if [ -z "$nii" -a -z "$an" -a -z "$mgz" ]; then 
+		echo "mask_face ERROR: debug mode only supported with -an or -nii option."
+		exit -1
+	fi
+fi
 
 #set -x
 # imp_ref variable may be set in maskface.params file by external routines that resolve the 
@@ -569,7 +592,7 @@ if (( nsrc>1 )); then
 	if [ -z "$ref" ]; then 
 	    exit_with_error "multiple scans specified, but reference scan is not defined"
 	else 
-		rt=$ref
+		rt=`getrt $ref`
 	fi
 fi
 
@@ -581,13 +604,20 @@ fi
 if [ -n "$tdate" ]; then
 	procdir=${procdir}_`date +%Y%m%d_%H%M`
 fi
+
+#datadir is where original input is located or copied for processing.
+#procdir is the subdir of datadir where all processing is done.
+datadir=`pwd`
 mkdir -p ${procdir}
 
 #convert data from DICOM
-if [ -z "$rt" ]; then rt=$src; fi
+if [ -z "$rt" ]; then rt=`getrt $src`; fi
 if [ -z "$outdir" ]; then outdir=`pwd`/DICOM_DEFACED; fi
 #set -x
-if [ -z "$an" ]; then	
+
+#convert to Analyze/copy to procdir if DICOM input. Intermediate processing is saved in $datadir (current dir)
+if [ -z "$an" -a -z "$nii" -a -z "$mgz" ]; then	
+	
 	for ((i=0;i<$nsrc;i++)); do
 		st=${src[i]}
 		if [ ! -d "$st" ]; then	exit_with_error "input directory \"$st\" does not exist"; fi
@@ -595,14 +625,35 @@ if [ -z "$an" ]; then
 		if (( mni == 0 )); then
 		    echo dcm2analyze -D $st -A $bst
 			dcm2analyze -D $st -A $bst
+			if (( $? )); then
+				echo "ERROR running dcm2analyze, exiting"
+				exit -1
+			fi
+				
 		else
 			#convert target to standard space but also keep inverse matrix and raw DICOM voxels.
 			echo dcm2analyze -D $st -A ${bst}_d2a
 			dcm2analyze -D $st -A ${bst}_d2a
-			echo dcm_nii $st ${bst}_nii_orig -m ${bst}2std.mat
-			dcm_nii $st ${bst}_nii_orig -m ${bst}2std.mat
+			if (( $? )); then
+				echo "ERROR running dcm2analyze, exiting"
+				exit -1
+			fi
+			#echo dcm_nii $st ${bst}_nii_orig -m ${bst}2std.mat			
+			#dcm_nii $st ${bst}_nii_orig -m ${bst}2std.mat
+
+			echo dcm_niix $st ${bst}_nii -m ${bst}2std.mat			
+			dcm_niix $st ${bst}_nii -m ${bst}2std.mat
+			if (( $? )); then 
+				echo "ERROR running dcm_niix, exiting"
+				exit -1
+			fi
+
 			echo nii_img ${bst}_nii_orig 
 			nii_img ${bst}_nii_orig 
+			if (( $? )); then 
+				echo "ERROR running nii_img, exiting"
+				exit -1
+			fi
 			rm -rf ${bst}_nii_orig.nii
 			echo fslreorient2std ${bst}_nii_orig ${bst}_nii_std
 			fslreorient2std ${bst}_nii_orig ${bst}_nii_std
@@ -615,13 +666,55 @@ if [ -z "$an" ]; then
 		cp $bst.hdr $bst.img $procdir
 		srcrt[i]=`basename ${src[i]}`
 	done
-fi
+else
+	#convert/copy to procdir if NII/Analyze input
+	is_nii_gz=0
+	for ((i=0;i<$nsrc;i++)); do
+		#either DICOM study dir or Analyze/NII root with full path
+		src_="${src[i]}"
+		#study dir/root with no path
+		strt="`basename $src_`"		
+		echo "strt: $strt"
+		if [[ "$strt" == *.gz ]]; then is_nii_gz=1; echo "NII.GZ detected"; fi
 
-#copy sources to procdir.
-for ((i=0;i<$nsrc;i++)); do
-	st=${srcrt[i]}
-	if [ ! -f "$procdir/${st}.img" ]; then	cp $st.hdr $st.img $procdir; fi
-done
+		#path where study root is located
+		stpath=${src#$strt}
+
+		#study root without file extension (.img, .hdr, .nii, .nii.gz)
+		st=`getrt $strt`
+		srcrt[i]="$st"
+
+		if [ -n "$mgz" ]; then 
+			echo mri_convert $src_ $procdir/$st.img			
+			mri_convert $src_ $procdir/$st.img
+			if (( $? )); then exit_with_error "ERROR: Cannot convert MGZ to NIFTI"; fi
+		elif [ -n "$nii" ]; then
+			# the result is saved in processing dir.
+			echo "converting NIFTI to .img/.hdr pair"
+			echo fslmaths $src_ -mul 1 $procdir/${st}
+			fslmaths $src_ -mul 1 $procdir/${st}			
+			if (( $? )); then exit_with_error "ERROR: Cannot convert NIFTI to Analyze"; fi
+		#if input is .hdr/.img pair, copy it to the processing dir.
+		elif [ ! -f "$procdir/${st}.img" ]; then 
+			cp $stpath/$st.hdr $stpath/$st.img $procdir/
+			if (( $? )); then exit_with_error "ERROR: Cannot copy input to processing dir"; fi
+		fi
+		#resample for debugging purposes.
+		if (( debug )); then
+			mv $procdir/$st.img $procdir/${st}.orig_res.img
+			mv $procdir/$st.hdr $procdir/${st}.orig_res.hdr
+			echo flirt -in $procdir/${st}.orig_res -ref $procdir/${st}.orig_res -out $procdir/${st} -applyisoxfm 2
+			flirt -in $procdir/${st}.orig_res -ref $procdir/${st}.orig_res -out $procdir/${st} -applyisoxfm 2
+			if (( $? )); then exit_with_error "debug mode ERROR: Cannot resample input to 2mm voxels"; fi
+                fi
+
+		#BET expects this in current dir.
+		if [ ! -f "$st.img" ]; then 
+			cp $procdir/$st.img $procdir/$st.hdr .
+		fi
+         done
+fi #preprocessing/format conversion done.
+
 rt=`basename $rt`
 
 MNI152=$FSLDIR/data/standard/MNI152lin_T1_1mm.nii.gz
@@ -683,6 +776,7 @@ if (( manual_roi==0 )); then #automatic ROI calculation for the reference series
 		#-init MNI152_reor_to_${rt}.fslmat
 		echo flirt $mask_opts -ref $rt -in $T -out ${ATLAS}_on_${rt} -omat ${ATLAS}_to_${rt}.fslmat
 		time flirt $mask_opts -ref $rt -in $T -out ${ATLAS}_on_${rt} -omat ${ATLAS}_to_${rt}.fslmat
+		if (( $? )); then exit_with_error "ERROR: registration to atlas failed"; fi
 		matrix_to_decimal ${ATLAS}_to_${rt}.fslmat
 		
 		if (( mni == 1 )); then
@@ -773,8 +867,11 @@ else #auto ROI's
 		echo "Masking face ..."
 		rt_in=$rt_out
 		rt_out=${rt}_$i
-                echo run_masking_coord ${rt_in} ${rt_out} ${rt}_faceroi.lst $rt_out $params
+        echo run_masking_coord ${rt_in} ${rt_out} ${rt}_faceroi.lst $rt_out $params
 		run_masking_coord ${rt_in} ${rt_out} ${rt}_faceroi.lst $rt_out $params
+#		if (( $? )); then 
+#		    exit_with_error "mask_face ERROR: run_masking_coord failed"
+#		fi
 		params="'head_mask','${rt}_obj_mask',$params"
 		(( i++ ))
 	fi
@@ -784,6 +881,9 @@ else #auto ROI's
 		rt_out=${rt}_$i
                 echo run_masking_coord ${rt_in} ${rt_out} ${rt}_earl.lst $rt_out $params
 		run_masking_coord ${rt_in} ${rt_out} ${rt}_earl.lst $rt_out $params
+#		if (( $? )); then 
+#		    exit_with_error "mask_face ERROR: run_masking_coord failed"
+#		fi		
 		(( i++ ))
 	fi
 	if [ -f "${rt}_earr.lst" ]; then
@@ -792,6 +892,9 @@ else #auto ROI's
 		rt_out=${rt}_$i
                 echo run_masking_coord $rt_in ${rt_out} ${rt}_earr.lst $rt_out $params 
 		run_masking_coord $rt_in ${rt_out} ${rt}_earr.lst $rt_out $params
+#		if (( $? )); then 
+#		    exit_with_error "mask_face ERROR: run_masking_coord failed"		    
+#		fi
 		(( i++ ))
 	fi
 	#re-generate the final snapshot
@@ -807,20 +910,51 @@ rename_output $rt_out $rt $method
 params="'method','$method','grain',$step,'optimization',$v"
 echo "Studies: $srcrt, $nsrc"
 if (( nsrc>1 )); then
+	refrt=`getrt $ref 1`
 	for (( i=0; i<nsrc; i++ )); do
 		echo ${srcrt[i]}
-		if [ "${srcrt[i]}" == "$ref" ]; then out[$i]=$rt_out; continue; fi
-		echo run_masking_secondary ${srcrt[i]} $ref $params
-		run_masking_secondary ${srcrt[i]} $ref $params
+		if [ "${srcrt[i]}" == "$refrt" ]; then out[$i]=$rt_out; continue; fi
+		echo run_masking_secondary ${srcrt[i]} $refrt "$params"
+		run_masking_secondary ${srcrt[i]} $refrt "$params"
 		out[$i]=${srcrt[i]}_full_${method}		
 	done
 else
 	out=${rt}_full_${method}
 fi
+#pop out of $procdir
 popd &> /dev/null
 
 # write back the modified DICOM for all processed series.
 for ((i=0; i<${#out[*]}; i++ )); do
+	#if input was NII, convert output to NIFTI.
+	#if input was Analyze, this cycle does nothing.
+	if [ -n "$nii" ]; then		
+		oldFSLOUTPUTTYPE=$FSLOUTPUTTYPE
+		if (( is_nii_gz )); then 
+			export FSLOUTPUTTYPE=NIFTI_GZ
+		else 
+			export FSLOUTPUTTYPE=NIFTI	
+		fi
+		#convert output to NIFTI
+		echo fslmaths $procdir/${srcrt[i]}_full_${method} -mul 1 ${srcrt[i]}_full_${method}
+		fslmaths $procdir/${srcrt[i]}_full_${method} -mul 1 ${srcrt[i]}_full_${method}
+
+		#make sure output header matches the input header.
+		if (( debug !=1 )); then 
+		    echo fslcpgeom ${src[i]} ${srcrt[i]}_full_${method}
+		    fslcpgeom ${src[i]} ${srcrt[i]}_full_${method}
+        fi
+		if (( $? )); then exit_with_error "ERROR: Cannot convert facemasked output to NIFTI"; fi
+		export FSLOUTPUTTYPE=$oldFSLOUTPUTTYPE
+		continue 
+	elif [ -n "$mgz" ]; then
+		echo mri_convert  $procdir/${srcrt[i]}_full_${method}.img ${srcrt[i]}_full_${method}.mgz
+		if (( $? )); then exit_with_error "ERROR: Cannot convert facemasked output to MGZ"; fi
+		mri_convert  $procdir/${srcrt[i]}_full_${method}.img ${srcrt[i]}_full_${method}.mgz
+		continue
+	fi
+
+	#this only deals with DICOM output
 	write_out ${src[i]} ${srcrt[i]}_full_${method} $outdir/${srcrt[i]} $procdir
 	if [ -n "$create_zip" ]; then
 		s=${srcrt[i]}
@@ -830,3 +964,6 @@ for ((i=0; i<${#out[*]}; i++ )); do
 #		popd
 	fi
 done
+
+echo "Facemasking done."
+
