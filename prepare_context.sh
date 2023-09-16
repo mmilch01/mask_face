@@ -25,16 +25,19 @@ matlab_routines_resources="mask_surf_auto.m avw_hdr_make.m avw_hdr_read.m avw_hd
 
 
 pushd nrg_improc &> /dev/null
+	pwd
         echo cp -f $nrg_improc_tools $T/
         cp -f $nrg_improc_tools $T/
         echo cp -f $atlas_resources $T/ATLAS/
         cp -f $atlas_resources $T/ATLAS/
         
         pushd $matlab_dir/routines &> /dev/null
+		pwd
                 echo cp -rf $matlab_routines_resources $T/matlab/routines/
                 cp -rf $matlab_routines_resources $T/matlab/routines/
         popd &> /dev/null
         pushd $matlab_dir/surf &> /dev/null
+		pwd
                 echo cp -rf $matlab_surf_resources $T/matlab/surf/
                 cp -rf $matlab_surf_resources $T/matlab/surf/
         popd &> /dev/null        

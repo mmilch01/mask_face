@@ -177,7 +177,8 @@ for nv=1:nVols
         stats=get_seg_stats(Frame,Vmask,[1 2]);
         m=stats(1,1);
         Vrev1=m*Vmask+(1-Vmask).*Frame;
-        Vrev=uint16(Vrev1.*(1-Vexm)+Vexm.*Frame);
+        %Vrev=uint16(Vrev1.*(1-Vexm)+Vexm.*Frame);
+        Vrev=Vrev1.*(1-Vexm)+Vexm.*Frame;
         if(nv==1 && opt>0)
             saveVol(Vrev,[root '_coating']);
         end;
@@ -197,7 +198,8 @@ for nv=1:nVols
         end;
         Vbl=blur3(Frame,2*thickness);
         Vrev1=Vmask.*Vbl+(1-Vmask).*Frame;
-        Vrev=uint16(Vrev1.*(1-Vexm)+Vexm.*Frame);
+        %Vrev=uint16(Vrev1.*(1-Vexm)+Vexm.*Frame);
+        Vrev=Vrev1.*(1-Vexm)+Vexm.*Frame;
         if(nv==1 && opt>0)
             saveVol(Vrev,[root '_blur']);
         end;
@@ -217,18 +219,22 @@ for nv=1:nVols
         end;
         %mask volume.
         disp('lowpass filtering');
+        Vres(isnan(Vres) | isinf(Vres)) = 0;
         V1=blur3_thin(Vres,thickness);
         if(opt>0)
-            saveVol(uint16(V1),[root '_face_blur']);
+            %saveVol(uint16(V1),[root '_face_blur']);
+            saveVol(V1,[root '_face_blur']);
         end;
         %project backward.
         disp('back projection');
         [Vrev1,Vmask]=projectVol(V1,Frame,orig_surf,lower_surf,upper_surf,thickness,step,'reverse',opt);
-        Vrev=uint16(Vrev1.*(1-Vexm)+Vexm.*Frame);
+        %Vrev=uint16(Vrev1.*(1-Vexm)+Vexm.*Frame);
+        Vrev=Vrev1.*(1-Vexm)+Vexm.*Frame;
         disp(['finalizing normalized filtering, frame ' num2str(nv)]);
         %return to the original orientation.
         if(opt>0)
-            saveVol(uint16(Vrev),[root '_normfilter']);
+            %saveVol(uint16(Vrev),[root '_normfilter']);
+            saveVol(Vrev,[root '_normfilter']);
         end;
         Vrev=reorient(Vrev,vertical,-1,inverse,newdim,pad);
     %   saveVol(uint16(Vrev),[root '_normfilter']);    

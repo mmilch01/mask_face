@@ -1,6 +1,9 @@
-function[Z] = dispvol3D(V,pixdim,thresh,angles)
+function[Z] = dispvol3D(V1,pixdim,thresh,angles)
 %this line is for the batch offscreen figure saving.
 %opengl software;
+disp('entered dispvol3D');
+V=V1;
+V(isinf(V)|isnan(V))=0;
 
 %subplot(1,2,1);
 %Ds=smooth3(resample3D(V,pixdim,1));
@@ -8,6 +11,7 @@ if ~exist ('angles','var')
    angles=[-45 0 0];
 end
 dsz=0.8;
+
 Ds=smooth3(resample3D(V,pixdim,dsz));
 iso=isosurface(Ds,thresh);
 
@@ -15,7 +19,13 @@ iso=isosurface(Ds,thresh);
 %Z=render(iso.vertices,iso.faces,[180 -80 0]);
 %Z=render(iso.vertices,iso.faces,[90 -45 -90]);
 %Z=render(iso.vertices,iso.faces,[135 180 0]);
-Z=abs(render(iso.vertices,iso.faces,angles));
+
+if ( sum(size(iso.vertices))<10 ) || ( sum(size(iso.faces))<10) 
+    disp('dispvol3D WARNING: not enough vertices/faces to render!');
+    Z=zeros(100,100);
+else    
+    Z=abs(render(iso.vertices,iso.faces,angles));
+end
 %imshow(Z,[0,1]);
 return;
 

@@ -491,6 +491,9 @@ if [ -z "$1" ]; then
 	exit 0
 fi
 
+#echo input args:
+#echo $@
+
 FSLOUTPUTTYPE=NIFTI_PAIR
 export FSLOUTPUTTYPE
 #set -x
@@ -731,6 +734,7 @@ atldir=${atldir%/mask_face}/ATLAS
 if [ "${brainmask}" == "1" ]; then
     if (( bhd == 0 )); then
         # use bet
+        echo "rt: $rt"
         echo bet $rt ${rt}_bet -m -f 0.3
     	bet $rt ${rt}_bet -m -f 0.3
     	if (( $? )); then exit_with_error "bet brain extraction failed"; fi

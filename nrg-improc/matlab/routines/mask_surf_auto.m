@@ -77,17 +77,22 @@ if (params.snapshotOnly==0)
     avw=avw_img_read(strcat(params.root,'.img'),0);
     avw.img=R;
     %save the result.
-    save_vol(uint16(R),avw,params.outroot);
+    disp(['writing ' params.outroot]);
+    save_vol(R,avw,params.outroot);
     %save QC snapshots.
+    disp(['writing ' params.outroot '_' params.method '.png' ]);
     snapshot(R(:,:,:,1),params.pixdim,params.ver,params.inv,[params.outroot '_' params.method '.png']);
+    disp(['writing ' params.outroot '_' params.method '_surf.png' ]);
     snapshot3D(R(:,:,:,1),params.pixdim,params.ver,params.inv,[params.outroot '_' params.method '_surf']);
 else
     R=params.V0;
     %save snapshots.
+    disp(['writing ' params.outroot '_' params.method '.png' ]);
     snapshot(R(:,:,:,1),params.pixdim,params.ver,params.inv,[params.outroot '_' params.method '.png']);
-    snapshot3D(R(:,:,:,1),params.pixdim,params.ver,params.inv,[params.outroot '_' params.method '_surf']);
+    disp(['writing ' params.outroot '_' params.method '_surf.png' ]);
+    snapshot3D(R(:,:,:,1),params.pixdim,params.ver,params.inv,[params.outroot '_' params.method '_surf']);    
 end;
-
+disp(['done mask_surf_auto']);
 
 %initialize all parameters needed to run the mask_surf.
 function [params,message] = init_params(p)

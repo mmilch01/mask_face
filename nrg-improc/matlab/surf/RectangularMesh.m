@@ -335,7 +335,8 @@ dx=sz(2)-1; dy=sz(3)-1;
 
 face_ind=1;
 vert_ind=1;
-
+faces=[]; 
+vertcs=[];
 for y=1:dy
     for x=1:dx
         

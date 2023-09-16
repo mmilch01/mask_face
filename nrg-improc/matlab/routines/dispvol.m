@@ -1,6 +1,7 @@
 function[] = dispvol(V0, M, nIm)
 %V=permute(V0,[2 1 3]);
 V=V0(:,:,:,1);
+V(isinf(V)|isnan(V))=0;
 colormap(gray(256));
 
 if ~exist('M','var')
