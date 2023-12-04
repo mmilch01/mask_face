@@ -56,8 +56,8 @@ if [ -z $scans -o -z "$xn_srv" -o -z "$xn_usr" -o -z "$xn_pass" -o -z "$xn_prj" 
 fi
 
 #Download scans & sort DICOM's
-echo xnat2loc $xn_exp -sr $xn_srv -u $xn_usr -pa pass -pr $xn_prj -s $scans -subj $xn_subj -m
-xnat2loc $xn_exp -sr $xn_srv -u $xn_usr -pa $xn_pass -pr $xn_prj -s $scans -subj $xn_subj -m
+echo xnat2loc $xn_exp -sr $xn_srv -u $xn_usr -pa pass -pr $xn_prj -s $scans -subj $xn_subj -m -uncompress
+xnat2loc $xn_exp -sr $xn_srv -u $xn_usr -pa $xn_pass -pr $xn_prj -s $scans -subj $xn_subj -m -uncompress
 
 if (( $? )); then exit_with_error "could not download all scans"; fi
 
