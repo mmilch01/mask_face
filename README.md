@@ -13,7 +13,7 @@ Environment requirements:
 
 ## Installing as a Docker container
 Make sure the up to date version of <a href="https://docs.docker.com/get-docker/">Docker</a> is installed and Docker daemon is running.<br>
-**sudo docker pull** xnat/facemasking:1.0
+**sudo docker pull** mmilch01/facemasking:1.1
 
 ## Running
 For a full list of options, run **mask_face** without parameters. If you wish to use HDBET to mask out the brain, GPU is recommended. 
