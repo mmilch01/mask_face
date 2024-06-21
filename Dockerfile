@@ -13,7 +13,7 @@ RUN mkdir -p /usr/local/MATLAB_Runtime && \
 	mkdir -p /docker_mount && \
 	mkdir -p /usr/local/maskface && \
 	mkdir -p /input && \
-	cd /tmp && wget https://repo.continuum.io/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh; chmod +x Miniconda3-4.5.1-Linux-x86_64.sh && \
+	cd /tmp && wget --no-check-certificate https://repo.continuum.io/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh; chmod +x Miniconda3-4.5.1-Linux-x86_64.sh && \
     ./Miniconda3-4.5.1-Linux-x86_64.sh -u -b -p /usr/local/miniconda3 && \
     rm -rf /tmp/* && \
     pip install --upgrade pip
@@ -29,6 +29,7 @@ COPY  mcr/for_redistribution_files_only/* /usr/local/maskface/
 COPY  mcr/MATLAB_MCR /usr/local/MATLAB_MCR/
 COPY nrg-improc /nrgpackages/tools/nrg-improc/
 COPY fsl	/nrgpackages/packages/fsl/
+COPY lib64/* /lib64/
 
 WORKDIR /docker_mount
 ENTRYPOINT [ "/bin/bash", "-l", "-c" ]

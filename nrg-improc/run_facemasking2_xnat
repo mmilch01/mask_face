@@ -4,6 +4,33 @@ function exit_with_error
     echo "run_facemasking2_xnat ERROR: $1"; exit -1
 }
 
+#maps XNAT scan ID's to allowed series ID's. 
+function map_scan_id_to_xnat
+{
+    #global suidmap suid_series_number_map dcm_series_numbers dcm_series_number_counts
+
+    local i j 
+    j=0
+    local studies=$(ls -d study*)
+
+    #link series instance UID and series number.
+    for study in ${studies[@]}; do
+        dcm_series_number=$(dcminfo_dcmtk 0020,0011 $study)
+        dcm_suid=$(dcminfo_dcmtk 0020,000E $study)
+        suid_series_number_map[$dcm_suid]=$dcm_series_number
+    done
+
+
+    for (( i=0; i<${#suidmap[*]}; i+=2 )); do        
+        xnat_scan_id="${suidmap[i]}"
+        suid="${suidmap[$((i+1))]}"
+        dcm_series_number=${suid_series_number_map[$suid]}
+        dcm_series_numbers[j]=$dcm_series_number
+        (( dcm_series_number_counts[$dcm_series_number]++ ))
+        ((j++))
+    done
+}
+
 function print_usage
 {
     echo "run facemasking2 as a single, self-contained script, (optionally) using XNAT server as data source"
@@ -68,8 +95,22 @@ pushd $xn_exp
         IFS=', ' read -r -a orig_scans <<< $scans
         IFS=', ' read -r -a suidmap <<< $serinstuids
         
+        declare -A sidmap_scan_counts
+        declare -A suid_series_number_map
+
+        # this function populates: suid_series_number_map dcm_series_numbers dcm_series_number_counts
+        map_scan_id_to_xnat        
+
+        for ind in ${!dcm_series_number_counts[@]}; do
+            if (( ${dcm_series_number_counts[$ind]} > 1 )); then 
+                exit_with_error "scans with non-unique DICOM series number ($ind) are not supported, exiting"
+            fi
+        done
+
         num_scans=${#orig_scans[*]}
-        ref=${suidmap[0]}; ref_uid=${suidmap[1]}; ref_defined=0
+        #ref=${suidmap[0]}
+        ref=${dcm_series_numbers[0]}
+        ref_uid=${suidmap[1]}; ref_defined=0
         echo "ref: $ref"
                 
         #orig_scans and suidmap are assumed to have the same order,
@@ -77,14 +118,15 @@ pushd $xn_exp
         dcm_scans=""
         
         n=0
-        for (( i=0; i<${#suidmap[*]}; i+=2 )); do
-            dcm_scans="$dcm_scans ${suidmap[i]}"            
-        done
+        #in the new version, this is done in map_scan_id_to_xnat, in array dcm_series_numbers
+        #for (( i=0; i<${#suidmap[*]}; i+=2 )); do
+            #dcm_scans="$dcm_scans ${suidmap[i]}"                   
+        #done
 
-        dcm_scans=( ${dcm_scans[*]} )
+        #dcm_scans=( ${dcm_scans[*]} )
         
-        for ds in ${dcm_scans[*]}; do
-            sid=(`dcminfo -q -t 0x0020 0x0011 study$ds`)
+        for ds in ${dcm_series_numbers[*]}; do
+            sid=(`dcminfo_dcmtk 0020,0011 study$ds`)
             echo "sid: $sid, ref: $ref"
             if [ "$sid" == "$ref" ]; then
                 echo "Reference series number found ($sid)"
@@ -99,14 +141,14 @@ pushd $xn_exp
         echo "Reference option: $ref_option"
                 
         dcm_scan_list=""
-        for s in ${dcm_scans[*]}; do
+        for s in ${dcm_series_numbers[*]}; do
             if [ ! -d "study$s" ]; then exit_with_error "could not read scan DICOMs"; fi
             dcm_scan_list="$dcm_scan_list,study$s"
         done
 
         dcm_scan_list=${dcm_scan_list#,}
         #run facemasking
-        echo "orig_scans: ${orig_scans[*]}; dcm_scans: ${dcm_scans[*]}"
+        echo "orig_scans: ${orig_scans[*]}; dcm_scans: ${dcm_series_numbers[*]}"
         echo mask_face_nomatlab $dcm_scan_list $ref_option $mfpar       
         time mask_face_nomatlab $dcm_scan_list $ref_option $mfpar
         
@@ -120,7 +162,7 @@ pushd $xn_exp
 	    if [ -n "$JSERROR" ]; then exit_with_error "uploading results failed: cannot acquire JSESSION"; fi
         
         for i in ${!orig_scans[*]}; do
-            sx=${orig_scans[i]}; sd=${dcm_scans[i]}
+            sx=${orig_scans[i]}; sd=${dcm_series_numbers[i]}
             echo "sx: $sx; sd: $sd"
             echo curl -X POST -k --cookie JSESSIONID=$JS "$rrt/$sx/resources/DICOM_DEFACED/files?$p1" \
                 -F "DICOM_DEFACED/$sd.zip=@DICOM_DEFACED/$sd.zip"
