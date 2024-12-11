@@ -32,3 +32,6 @@ To add GPU support to run HDBET, use --gpus <gpu_id|all> option with **docker ru
 3. Facemasked image in Analyze 7.5 format is saved under maskface/<original_dicom_dir_name>\_masked_nii_orig.img
 4. MATLAB output logs are saved under maskface/*.out
 5. Defaced DICOM's are saved under DICOM_DEFACED dir.
+
+## References
+1. Milchenko, Mikhail, and Daniel Marcus. “Obscuring Surface Anatomy in Volumetric Imaging Data.” Neuroinformatics, 2012. https://doi.org/10.1007/s12021-012-9160-3.
