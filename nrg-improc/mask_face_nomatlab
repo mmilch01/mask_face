@@ -450,7 +450,7 @@ if [ -z "$1" ]; then
 	echo "	-e <0|1>	[0] Mask ears"
 	echo "	-r <ref>	use <ref> (one of the scans) as reference to coregister "
 	echo "			all other scans to it. Use ROI's based on <ref>."
-	echo "	-mcr_home <dir>	MATLAB runtime environment home [/usr/local/MATLAB_MCR/v94]"
+	echo "	-mcr_home <dir>	MATLAB runtime environment home [/usr/local/MATLAB_MCR/v9.13]"
 	echo "	-deployed_home <dir>"
 	echo "			Deployed MCR application home [/usr/local/maskface]"
 	exit 0
@@ -475,7 +475,7 @@ procdir=maskface;brainmask=0;manual_roi=0;mask_atlas=0;bhd=0;brain_reg=0;
 mni=1
 unset an exMask outdir brainmask tdate
 #default paths, as installed in docker image
-mcr_home=/usr/local/MATLAB_MCR/v94
+mcr_home=/usr/local/MATLAB_MCR/v9.13
 deployed_home=/usr/local/maskface
 
 for((i=1; i<${#args[*]}; i++)); do
