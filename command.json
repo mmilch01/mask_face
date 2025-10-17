@@ -1,0 +1,319 @@
+{
+  "name": "Facemasking v1.21",
+  "label": "Facemasking",
+  "description": "Runs Facemasking on structural MRI",
+  "version": "1.21",
+  "schema-version": "1.0",
+  "info-url": "",
+  "image": "registry.nrg.wustl.edu/docker/nrg-repo/facemasking:1.21",
+  "type": "docker",
+  "command-line": "\"run_facemasking2_xnat #SESSION_LABEL# #REF_SCAN1_ID#,#SCAN2_ID#,#SCAN3_ID#,#SCAN4_ID#,#SCAN5_ID# --srv $XNAT_HOST --usr $XNAT_USER --pass $XNAT_PASS --proj #PROJECT# --subj #SUBJECT# -t #THRESH#, -s #COARSENESS# -b #USE_BET# -bhd #USE_BETHD# -e #MASK_EARS#\"",
+  "mounts": [
+    {
+      "name": "input",
+      "writable": false,
+      "path": "/input"
+    },
+    {
+      "name": "output",
+      "writable": true,
+      "path": "/docker_mount"
+    }
+  ],
+  "environment-variables": {},
+  "ports": {},
+  "inputs": [
+    {
+      "name": "SESSION_ID",
+      "description": "XNAT session ID",
+      "type": "string",
+      "required": true,
+      "select-values": []
+    },
+    {
+      "name": "SESSION_LABEL",
+      "description": "XNAT session label",
+      "type": "string",
+      "required": true,
+      "select-values": []
+    },
+    {
+      "name": "PROJECT",
+      "description": "XNAT project",
+      "type": "string",
+      "required": true,
+      "select-values": []
+    },
+    {
+      "name": "SUBJECT",
+      "description": "XNAT subject",
+      "type": "string",
+      "required": true,
+      "select-values": []
+    },
+    {
+      "name": "THRESH",
+      "description": "Object/background intensity threshold [-1 for auto-detect]",
+      "type": "string",
+      "default-value": "-1",
+      "required": true,
+      "select-values": []
+    },
+    {
+      "name": "COARSENESS",
+      "description": "Grid coarseness between 0.3 and 3.0",
+      "type": "string",
+      "default-value": "1.0",
+      "required": true,
+      "select-values": []
+    },
+    {
+      "name": "USE_BET",
+      "description": "USE BET to mask brain (fast, less accurate)",
+      "type": "string",
+      "default-value": "0",
+      "required": true,
+      "select-values": []
+    },
+    {
+      "name": "USE_BETHD",
+      "description": "Use BET HD to mask brain (fast on GPU, more accurate)",
+      "type": "string",
+      "default-value": "0",
+      "required": true,
+      "select-values": []
+    },
+    {
+      "name": "MASK_EARS",
+      "description": "Apply surface mask to ears",
+      "type": "string",
+      "default-value": "0",
+      "required": true,
+      "select-values": []
+    },
+    {
+      "name": "REF_SCAN1_ID",
+      "description": "Reference scan (choose scan of highest quality)",
+      "type": "string",
+      "required": true,
+      "select-values": []
+    },
+    {
+      "name": "SCAN2_ID",
+      "description": "Another scan",
+      "type": "string",
+      "required": false,
+      "select-values": []
+    },
+    {
+      "name": "SCAN3_ID",
+      "description": "Another scan",
+      "type": "string",
+      "required": false,
+      "select-values": []
+    },
+    {
+      "name": "SCAN4_ID",
+      "description": "Another scan",
+      "type": "string",
+      "required": false,
+      "select-values": []
+    },
+    {
+      "name": "SCAN5_ID",
+      "description": "Another scan",
+      "type": "string",
+      "required": false,
+      "select-values": []
+    }
+  ],
+  "outputs": [],
+  "xnat": [
+    {
+      "name": "Facemasking",
+      "description": "Run Facemasking 1.21",
+      "contexts": [
+        "xnat:imageSessionData"
+      ],
+      "external-inputs": [
+        {
+          "name": "session",
+          "description": "Input session",
+          "type": "Session",
+          "required": true,
+          "load-children": true
+        }
+      ],
+      "derived-inputs": [
+        {
+          "name": "session-label",
+          "description": "Session label",
+          "type": "string",
+          "required": true,
+          "provides-value-for-command-input": "SESSION_LABEL",
+          "load-children": true,
+          "derived-from-wrapper-input": "session",
+          "derived-from-xnat-object-property": "label",
+          "multiple": false
+        },
+        {
+          "name": "session-id",
+          "description": "Session ID",
+          "type": "string",
+          "required": true,
+          "provides-value-for-command-input": "SESSION_ID",
+          "load-children": true,
+          "derived-from-wrapper-input": "session",
+          "derived-from-xnat-object-property": "id",
+          "multiple": false
+        },
+        {
+          "name": "subject",
+          "description": "Subject",
+          "type": "Subject",
+          "required": true,
+          "load-children": true,
+          "derived-from-wrapper-input": "session",
+          "multiple": false
+        },
+        {
+          "name": "subject-id",
+          "description": "Subject id",
+          "type": "string",
+          "required": true,
+          "provides-value-for-command-input": "SUBJECT",
+          "load-children": true,
+          "derived-from-wrapper-input": "subject",
+          "derived-from-xnat-object-property": "id",
+          "multiple": false
+        },
+        {
+          "name": "project",
+          "description": "Project",
+          "type": "Project",
+          "required": true,
+          "provides-value-for-command-input": "PROJECT",
+          "load-children": true,
+          "derived-from-wrapper-input": "session",
+          "multiple": false
+        },
+        {
+          "name": "project-id",
+          "description": "Project ID",
+          "type": "string",
+          "required": true,
+          "provides-value-for-command-input": "PROJECT",
+          "load-children": true,
+          "derived-from-wrapper-input": "project",
+          "derived-from-xnat-object-property": "id",
+          "multiple": false
+        },
+        {
+          "name": "ref_scan1",
+          "description": "Reference scan (choose scan of highest quality)",
+          "type": "Scan",
+          "required": true,
+          "load-children": true,
+          "derived-from-wrapper-input": "session",
+          "multiple": false
+        },
+        {
+          "name": "ref_scan1_id",
+          "description": "Reference scan ID (choose scan of highest quality)",
+          "type": "string",
+          "required": true,
+          "provides-value-for-command-input": "REF_SCAN1_ID",
+          "load-children": true,
+          "derived-from-wrapper-input": "ref_scan1",
+          "derived-from-xnat-object-property": "id",
+          "multiple": false
+        },
+        {
+          "name": "scan2",
+          "description": "Another scan (optional)",
+          "type": "Scan",
+          "required": false,
+          "load-children": true,
+          "derived-from-wrapper-input": "session",
+          "multiple": false
+        },
+        {
+          "name": "scan2_id",
+          "description": "Another scan ID (optional)",
+          "type": "string",
+          "required": false,
+          "provides-value-for-command-input": "SCAN2_ID",
+          "load-children": true,
+          "derived-from-wrapper-input": "scan2",
+          "derived-from-xnat-object-property": "id",
+          "multiple": false
+        },
+        {
+          "name": "scan3",
+          "description": "Another scan (optional)",
+          "type": "Scan",
+          "required": false,
+          "load-children": true,
+          "derived-from-wrapper-input": "session",
+          "multiple": false
+        },
+        {
+          "name": "scan3_id",
+          "description": "Another scan ID (optional)",
+          "type": "string",
+          "required": false,
+          "provides-value-for-command-input": "SCAN3_ID",
+          "load-children": true,
+          "derived-from-wrapper-input": "scan3",
+          "derived-from-xnat-object-property": "id",
+          "multiple": false
+        },
+        {
+          "name": "scan4",
+          "description": "Another scan (optional)",
+          "type": "Scan",
+          "required": false,
+          "load-children": true,
+          "derived-from-wrapper-input": "session",
+          "multiple": false
+        },
+        {
+          "name": "scan4_id",
+          "description": "Another scan ID (optional)",
+          "type": "string",
+          "required": false,
+          "provides-value-for-command-input": "SCAN4_ID",
+          "load-children": true,
+          "derived-from-wrapper-input": "scan4",
+          "derived-from-xnat-object-property": "id",
+          "multiple": false
+        },
+        {
+          "name": "scan5",
+          "description": "Another scan (optional)",
+          "type": "Scan",
+          "required": false,
+          "load-children": true,
+          "derived-from-wrapper-input": "session",
+          "multiple": false
+        },
+        {
+          "name": "scan5_id",
+          "description": "Another scan ID (optional)",
+          "type": "string",
+          "required": false,
+          "provides-value-for-command-input": "SCAN5_ID",
+          "load-children": true,
+          "derived-from-wrapper-input": "scan5",
+          "derived-from-xnat-object-property": "id",
+          "multiple": false
+        }
+      ],
+      "output-handlers": []
+    }
+  ],
+  "container-labels": {},
+  "generic-resources": {},
+  "ulimits": {},
+  "secrets": []
+}
